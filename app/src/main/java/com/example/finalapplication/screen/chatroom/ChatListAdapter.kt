@@ -12,7 +12,6 @@ import com.example.finalapplication.databinding.ItemSendBinding
 import com.example.finalapplication.utils.base.BaseViewHolder
 import com.example.finalapplication.utils.loadImageByUrl
 import com.example.finalapplication.utils.toDateTime
-import com.example.finalapplication.utils.toTime
 
 class ChatListAdapter(private val revicerid: String) :
     ListAdapter<Message, BaseViewHolder<Any>>(Message.diffCallback) {
@@ -82,9 +81,14 @@ class ChatListAdapter(private val revicerid: String) :
                         containerCall.isVisible = true
                         textSend.isVisible = false
                         imageSend.isVisible = false
-                        imageCall.setImageResource(R.drawable.ic_baseline_call_24)
-                        textTypeCall.text = Message.call
-                        textTime.text = message.callTime.toTime() + "\n" + message.time.toDateTime()
+                        if (message.callTime < 0) {
+                            imageCall.setImageResource(R.drawable.ic_baseline_call_missed_24)
+                            textTypeCall.text = Message.missCall
+                        } else {
+                            imageCall.setImageResource(R.drawable.ic_baseline_call_24)
+                            textTypeCall.text = Message.call
+                        }
+                        textTime.text = message.time.toDateTime()
                     }
                 }
                 Message.video -> {
@@ -92,9 +96,14 @@ class ChatListAdapter(private val revicerid: String) :
                         containerCall.isVisible = true
                         textSend.isVisible = false
                         imageSend.isVisible = false
-                        imageCall.setImageResource(R.drawable.ic_baseline_videocam_24)
-                        textTypeCall.text = Message.call
-                        textTime.text = message.callTime.toTime() + "\n" + message.time.toDateTime()
+                        if (message.callTime < 0) {
+                            imageCall.setImageResource(R.drawable.ic_baseline_missed_video_call_24)
+                            textTypeCall.text = Message.missVideo
+                        } else {
+                            imageCall.setImageResource(R.drawable.ic_baseline_videocam_24)
+                            textTypeCall.text = Message.video
+                        }
+                        textTime.text = message.time.toDateTime()
                     }
                 }
             }
@@ -126,9 +135,14 @@ class ChatListAdapter(private val revicerid: String) :
                         containerCall.isVisible = true
                         textReciver.isVisible = false
                         imageReceiver.isVisible = false
-                        imageCall.setImageResource(R.drawable.ic_baseline_call_24)
-                        textTypeCall.text = Message.call
-                        textTime.text = message.callTime.toTime() + "\n" + message.time.toDateTime()
+                        if (message.callTime < 0) {
+                            imageCall.setImageResource(R.drawable.ic_baseline_call_missed_24)
+                            textTypeCall.text = Message.missCall
+                        } else {
+                            imageCall.setImageResource(R.drawable.ic_baseline_call_24)
+                            textTypeCall.text = Message.call
+                        }
+                        textTime.text = message.time.toDateTime()
                     }
                 }
                 Message.video -> {
@@ -136,9 +150,14 @@ class ChatListAdapter(private val revicerid: String) :
                         containerCall.isVisible = true
                         textReciver.isVisible = false
                         imageReceiver.isVisible = false
-                        imageCall.setImageResource(R.drawable.ic_baseline_videocam_24)
-                        textTypeCall.text = Message.call
-                        textTime.text = message.callTime.toTime() + "\n" + message.time.toDateTime()
+                        if (message.callTime < 0) {
+                            imageCall.setImageResource(R.drawable.ic_baseline_missed_video_call_24)
+                            textTypeCall.text = Message.missVideo
+                        } else {
+                            imageCall.setImageResource(R.drawable.ic_baseline_videocam_24)
+                            textTypeCall.text = Message.video
+                        }
+                        textTime.text = message.time.toDateTime()
                     }
                 }
             }

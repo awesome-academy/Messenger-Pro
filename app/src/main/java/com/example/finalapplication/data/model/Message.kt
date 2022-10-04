@@ -41,6 +41,8 @@ class Message() : Parcelable {
         const val time = "time"
         const val chatbox = "chatbox"
         const val call = "Cuộc gọi thoại"
+        const val missCall = "Cuộc gọi nhỡ"
+        const val missVideo = "Cuộc gọi nhỡ video"
         const val video = "Cuộc gọi video"
         const val image = "Hình ảnh"
         const val roomId = "roomId"
@@ -55,5 +57,9 @@ class Message() : Parcelable {
             }
 
         }
+    }
+
+    override fun toString(): String {
+        return text.toString()
     }
 }

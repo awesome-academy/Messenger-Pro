@@ -1,6 +1,5 @@
 package com.example.finalapplication.data.repository
 
-import android.net.Uri
 import com.example.finalapplication.data.model.Message
 import com.example.finalapplication.data.model.User
 import com.example.finalapplication.data.repository.resource.Listenner

@@ -13,6 +13,9 @@ class ProfileViewModel(private val userRepository: UserRepository) : BaseViewMod
     private val _user = MutableLiveData<User>()
     val user: LiveData<User>
         get() = _user
+    private val _logoutSuccess = MutableLiveData<Boolean>()
+    val logoutSuccess: LiveData<Boolean>
+        get() = _logoutSuccess
 
     init {
         launchTask<User>(onRequest = {
@@ -30,7 +33,16 @@ class ProfileViewModel(private val userRepository: UserRepository) : BaseViewMod
     }
 
     fun logout() {
-        userRepository.logout()
+        userRepository.logout(object : Listenner<Boolean> {
+            override fun onSuccess(data: Boolean) {
+                _logoutSuccess.value = data
+            }
+
+            override fun onError(msg: String) {
+                // TODO("Not yet implemented")
+            }
+
+        })
     }
 
     fun updateUser(user: User, name: String) {
