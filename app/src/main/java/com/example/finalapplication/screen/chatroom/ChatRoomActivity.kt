@@ -3,6 +3,7 @@ package com.example.finalapplication.screen.chatroom
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,7 +14,9 @@ import com.example.finalapplication.BuildConfig
 import com.example.finalapplication.data.model.Message
 import com.example.finalapplication.data.model.User
 import com.example.finalapplication.databinding.ActivityChatRoomBinding
+import com.example.finalapplication.screen.outgoing.OutgoingActivity
 import com.example.finalapplication.utils.Constant
+import com.example.finalapplication.utils.FcmConstant
 import com.example.finalapplication.utils.NumberConstant
 import com.example.finalapplication.utils.ScrollListenner
 import com.example.finalapplication.utils.StatusConstant
@@ -26,7 +29,7 @@ import java.io.File
 class ChatRoomActivity : BaseActivity<ActivityChatRoomBinding>(ActivityChatRoomBinding::inflate) {
 
     private val chatViewModel: ChatViewModel by viewModel()
-    private lateinit var currentUser: User
+    private var currentUser: User? = null
     private var adversaryUser: User? = null
     private val messages = mutableListOf<Message>()
     private lateinit var chatAdapter: ChatListAdapter
@@ -34,6 +37,8 @@ class ChatRoomActivity : BaseActivity<ActivityChatRoomBinding>(ActivityChatRoomB
     private var isEndPage = false
     private var isLoading = false
     private var currentPath = ""
+    private var isLoadImage = false
+    private lateinit var adversaryId: String
     private val activityResultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK && result.data != null) {
@@ -43,12 +48,21 @@ class ChatRoomActivity : BaseActivity<ActivityChatRoomBinding>(ActivityChatRoomB
                     getNewid().toString(),
                     Message.chatbox,
                     System.currentTimeMillis(),
-                    currentUser.id.toString(),
+                    currentUser?.id.toString(),
                     adversaryUser?.id.toString()
                 )
                 message.image = uri.toString()
-                message.roomId = currentUser.id + adversaryUser?.id
-                adversaryUser?.let { it1 -> chatViewModel.sendMessage(currentUser, it1, message) }
+                message.roomId = currentUser?.id + adversaryUser?.id
+                isLoadImage = true
+                adversaryUser?.let { adversary ->
+                    currentUser?.let { current ->
+                        chatViewModel.sendMessage(
+                            current,
+                            adversary,
+                            message
+                        )
+                    }
+                }
             }
         }
     private val activityResultCameraLauncher =
@@ -58,12 +72,21 @@ class ChatRoomActivity : BaseActivity<ActivityChatRoomBinding>(ActivityChatRoomB
                     getNewid().toString(),
                     Message.chatbox,
                     System.currentTimeMillis(),
-                    currentUser.id.toString(),
+                    currentUser?.id.toString(),
                     adversaryUser?.id.toString()
                 )
                 message.image = Uri.fromFile(File(currentPath)).toString()
-                message.roomId = currentUser.id + adversaryUser?.id
-                adversaryUser?.let { it1 -> chatViewModel.sendMessage(currentUser, it1, message) }
+                message.roomId = currentUser?.id + adversaryUser?.id
+                isLoadImage = true
+                adversaryUser?.let { adversary ->
+                    currentUser?.let { current ->
+                        chatViewModel.sendMessage(
+                            current,
+                            adversary,
+                            message
+                        )
+                    }
+                }
             }
         }
 
@@ -72,27 +95,40 @@ class ChatRoomActivity : BaseActivity<ActivityChatRoomBinding>(ActivityChatRoomB
             adversaryUser = data
             binding.apply {
                 imageAvatar.loadImageByUrl(data.avatar, applicationContext)
-                textStatus.text = if (data.isOnline) StatusConstant.ONLINE
+                textStatus.text = if (data.online) StatusConstant.ONLINE
                 else StatusConstant.OFFLINE
                 textName.text = data.name
             }
         }
         chatViewModel.currentUser.observe(this) { data ->
             currentUser = data
+            if (data.id.toString() == adversaryId) {
+                binding.buttonCall.isVisible = false
+                binding.buttonVideoCall.isVisible = false
+            }
         }
         chatViewModel.newMessage.observe(this) { data ->
-            messages.add(0, data)
+            if (messages.isNotEmpty() && data.id == messages.first().id) {
+                messages.removeFirst()
+                messages.add(0, data)
+            } else {
+                messages.add(0, data)
+                chatViewModel.updateSeenMessage(currentUser?.id + adversaryUser?.id)
+            }
             binding.progressLoading.isVisible = false
             chatAdapter.submitList(messages)
             chatAdapter.notifyDataSetChanged()
             if (isFisrtMessage) {
-                chatViewModel.getHistoryMessage(adversaryUser?.id.toString(), data.time)
                 isFisrtMessage = false
+                chatViewModel.getHistoryMessage(adversaryUser?.id.toString(), data.time)
             }
         }
         chatViewModel.historyMessage.observe(this) { data ->
-            messages.addAll(data)
+            if (messages.size > 1 && data.isNotEmpty() && messages[1].time < data.first().time)
+                messages.add(1, data.first())
+            else messages.addAll(data)
             chatAdapter.submitList(messages)
+            binding.recyclerHistoryMessage.smoothScrollToPosition(0)
             chatAdapter.notifyDataSetChanged()
             if (data.size < NumberConstant.ITEM_PER_PAGE) {
                 isEndPage = true
@@ -101,14 +137,17 @@ class ChatRoomActivity : BaseActivity<ActivityChatRoomBinding>(ActivityChatRoomB
         }
         chatViewModel.isLoading.observe(this) { data ->
             this.isLoading = data
-            binding.progressLoading.isVisible = data
+            if (messages.isEmpty() || isLoadImage) {
+                binding.progressLoading.isVisible = data
+                isLoadImage = false
+            }
         }
     }
 
     override fun handleEvent() {
         binding.apply {
             buttonBack.setOnClickListener {
-                finish()
+                onBackPressed()
             }
             buttonSend.setOnClickListener {
                 val messageText = textMessage.text?.trim().toString()
@@ -118,12 +157,20 @@ class ChatRoomActivity : BaseActivity<ActivityChatRoomBinding>(ActivityChatRoomB
                     getNewid().toString(),
                     Message.chatbox,
                     System.currentTimeMillis(),
-                    currentUser.id.toString(),
+                    currentUser?.id.toString(),
                     adversaryUser?.id.toString()
                 )
                 message.text = messageText
-                message.roomId = currentUser.id + adversaryUser?.id
-                adversaryUser?.let { it1 -> chatViewModel.sendMessage(currentUser, it1, message) }
+                message.roomId = currentUser?.id + adversaryUser?.id
+                adversaryUser?.let { adversary ->
+                    currentUser?.let { current ->
+                        chatViewModel.sendMessage(
+                            current,
+                            adversary,
+                            message
+                        )
+                    }
+                }
             }
             recyclerHistoryMessage.addOnScrollListener(object :
                 ScrollListenner(recyclerHistoryMessage.layoutManager as LinearLayoutManager) {
@@ -144,38 +191,53 @@ class ChatRoomActivity : BaseActivity<ActivityChatRoomBinding>(ActivityChatRoomB
                 activityResultLauncher.launch(intent)
             }
             buttonCamera.setOnClickListener {
-                val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                val store = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-                val imageFile =
-                    File.createTempFile(Message.messages, Constant.EXTENSION_IMAGE, store)
-                currentPath = imageFile.absolutePath
-                val imageUri = FileProvider.getUriForFile(
-                    applicationContext,
-                    BuildConfig.APPLICATION_ID + Constant.PROVIDER,
-                    imageFile
-                )
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
-                activityResultCameraLauncher.launch(intent)
+                handleCapture()
+            }
+            buttonCall.setOnClickListener {
+                handleCall(Message.call)
+            }
+            buttonVideoCall.setOnClickListener {
+                handleCall(Message.video)
             }
         }
     }
 
+    private fun handleCall(meetingType: String) {
+        val intent = Intent(this, OutgoingActivity::class.java)
+        val bundle = Bundle()
+        bundle.putSerializable(User.currentUser, currentUser)
+        bundle.putSerializable(User.adversaryUser, adversaryUser)
+        bundle.putString(FcmConstant.MEETING_TYPE, meetingType)
+        intent.putExtra(FcmConstant.DATA, bundle)
+        startActivity(intent)
+    }
+
+    private fun handleCapture() {
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        val store = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val imageFile =
+            File.createTempFile(Message.messages, Constant.EXTENSION_IMAGE, store)
+        imageFile.deleteOnExit()
+        currentPath = imageFile.absolutePath
+        val imageUri = FileProvider.getUriForFile(
+            applicationContext,
+            BuildConfig.APPLICATION_ID + Constant.PROVIDER,
+            imageFile
+        )
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
+        activityResultCameraLauncher.launch(intent)
+    }
+
     override fun initData() {
-        val id = intent.getStringExtra(Constant.RECIVER)
-        chatViewModel.getReciver(id)
-        chatViewModel.getNewMessage(id)
-        chatAdapter = ChatListAdapter(id.toString())
-        chatAdapter.submitList(messages)
-        chatAdapter.notifyDataSetChanged()
+        adversaryId = intent.getStringExtra(Constant.RECIVER).toString()
+        chatAdapter = ChatListAdapter(adversaryId)
         val layoutManager = binding.recyclerHistoryMessage.layoutManager as LinearLayoutManager
         layoutManager.reverseLayout = true
         layoutManager.stackFromEnd = true
         binding.recyclerHistoryMessage.layoutManager = layoutManager
         binding.recyclerHistoryMessage.adapter = chatAdapter
-    }
-
-    override fun onPause() {
-        chatViewModel.updateSeenMessage(currentUser.id + adversaryUser?.id)
-        super.onPause()
+        chatViewModel.getReciver(adversaryId)
+        chatViewModel.getNewMessage(adversaryId)
+        chatAdapter.notifyDataSetChanged()
     }
 }

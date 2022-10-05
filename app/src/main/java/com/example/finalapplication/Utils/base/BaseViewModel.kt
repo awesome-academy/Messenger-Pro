@@ -8,7 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 open class BaseViewModel : ViewModel() {
-    protected val loading = MutableLiveData<Boolean>()
+    protected val loading = MutableLiveData<Boolean>(false)
     val isLoading: LiveData<Boolean>
         get() = loading
     protected val message = MutableLiveData<String>()

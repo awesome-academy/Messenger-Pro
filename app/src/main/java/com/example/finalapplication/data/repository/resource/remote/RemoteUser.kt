@@ -11,6 +11,7 @@ import com.example.finalapplication.utils.getNewid
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 
 class RemoteUser : UserDataSource.Remote {
@@ -18,6 +19,7 @@ class RemoteUser : UserDataSource.Remote {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val database = Firebase.firestore
     private val storage = FirebaseStorage.getInstance().reference
+    private val fcm = FirebaseMessaging.getInstance()
 
     override suspend fun getUser(id: String?, listen: Listenner<User>) {
         val currentUser = auth.currentUser
@@ -136,6 +138,20 @@ class RemoteUser : UserDataSource.Remote {
             }
     }
 
+    override fun updateStatus(status: Boolean) {
+        if (status) {
+            fcm.token.addOnSuccessListener { data ->
+                database.collection(User.users)
+                    .document(auth.uid.toString())
+                    .update(mapOf(User.isOnline to status, User.fcmToken to data))
+            }
+        } else {
+            database.collection(User.users)
+                .document(auth.uid.toString())
+                .update(mapOf(User.isOnline to status))
+        }
+    }
+
     override suspend fun getUserByName(
         name: String,
         lastIndex: String,
@@ -163,7 +179,15 @@ class RemoteUser : UserDataSource.Remote {
             }
     }
 
-    override fun logout() {
-        auth.signOut()
+    override fun logout(listen: Listenner<Boolean>) {
+        database.collection(User.users)
+            .document(auth.uid.toString())
+            .update(mapOf(User.fcmToken to null, User.isOnline to false))
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    auth.signOut()
+                    listen.onSuccess(true)
+                }
+            }
     }
 }

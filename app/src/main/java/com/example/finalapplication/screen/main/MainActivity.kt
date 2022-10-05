@@ -5,12 +5,15 @@ import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.example.finalapplication.R
-import com.example.finalapplication.utils.base.BaseActivity
 import com.example.finalapplication.databinding.ActivityMainBinding
 import com.example.finalapplication.screen.historycontact.HistoryContactFragment
 import com.example.finalapplication.screen.profile.ProfileFragment
+import com.example.finalapplication.utils.base.BaseActivity
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::inflate) {
+
+    private val mainViewModel by viewModel<MainViewModel>()
 
     override fun handleEvent() {
         binding.apply {
@@ -77,6 +80,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
 
     override fun bindData() {
         // TODO  no-ip
+    }
+
+    override fun onResume() {
+        mainViewModel.updateStatus(true)
+        super.onResume()
+    }
+
+    override fun onBackPressed() {
+        mainViewModel.updateStatus(false)
+        super.onBackPressed()
     }
 
     companion object {

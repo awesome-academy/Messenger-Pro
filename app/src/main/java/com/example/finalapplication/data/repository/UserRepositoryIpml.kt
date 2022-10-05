@@ -43,8 +43,12 @@ class UserRepositoryIpml(val remote: UserDataSource.Remote) : UserRepository {
         remote.getUserByName(name, lastIndex, listen)
     }
 
+    override fun updateStatus(status: Boolean) {
+        remote.updateStatus(status)
+    }
 
-    override fun logout() {
-        remote.logout()
+
+    override fun logout(listen: Listenner<Boolean>) {
+        remote.logout(listen)
     }
 }

@@ -3,6 +3,7 @@ package com.example.finalapplication.utils
 import java.util.*
 
 object Constant {
+    const val ERROR_USER_NOT_CONNECT = "Can't be contacted"
     const val WARNING_ = "Warning!"
     const val ERROE_EMAIL_EMPTY = "enter your  email to reset password"
     const val NO_INTERNET = "No Internet, Please check!!"

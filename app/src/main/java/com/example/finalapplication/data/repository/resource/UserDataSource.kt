@@ -14,6 +14,7 @@ interface UserDataSource {
         suspend fun updateAvatar(user: User, listen: Listenner<Boolean>)
         suspend fun forgotPassword(email: String, listen: Listenner<Boolean>)
         suspend fun getUserByName(name: String, lastIndex: String, listen: Listenner<List<User>>)
-        fun logout()
+        fun updateStatus(status: Boolean)
+        fun logout(listen: Listenner<Boolean>)
     }
 }

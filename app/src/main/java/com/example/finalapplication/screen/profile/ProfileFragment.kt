@@ -41,9 +41,6 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding>(FragmentProfileBind
         binding.apply {
             buttonLogout.setOnClickListener {
                 profileViewModel.logout()
-                val intent = Intent(context, LoginActivity::class.java)
-                startActivity(intent)
-                activity?.finish()
             }
             buttonChangeProfile.setOnClickListener {
                 showDialogChangeProfile()
@@ -132,6 +129,13 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding>(FragmentProfileBind
         }
         profileViewModel.errorMessage.observe(this) { msg ->
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+        }
+        profileViewModel.logoutSuccess.observe(this) { data ->
+            if (data) {
+                val intent = Intent(context, LoginActivity::class.java)
+                startActivity(intent)
+                activity?.finish()
+            }
         }
     }
 }

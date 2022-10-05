@@ -1,21 +1,20 @@
 package com.example.finalapplication.data.model
 
 import android.annotation.SuppressLint
-import android.os.Parcelable
 import androidx.recyclerview.widget.DiffUtil
-import kotlinx.parcelize.Parcelize
+import java.io.Serializable
 
-@Parcelize
-class User() : Parcelable {
+class User() : Serializable {
     var id: String? = null
     var role: String? = null
     var name: String? = null
     var avatar: String? = null
     var phoneNumber: String? = null
-    var isOnline: Boolean = false
+    var online: Boolean = false
     var userAccount: Account? = Account()
     var bankAccountName: String? = null
     var bankAccount: String? = null
+    var fcmToken: String? = null
 
     constructor(
         role: String,
@@ -33,16 +32,20 @@ class User() : Parcelable {
     }
 
     companion object {
+        const val serialVersionUID = 2L
         const val users = "users"
         const val id = "id"
         const val role = "role"
         const val name = "name"
         const val avatar = "avatar"
         const val phoneNumber = "phoneNumber"
-        const val isOnline = "isOnline"
+        const val isOnline = "online"
         const val account = "userAccount"
         const val bankAccountName = "bankname"
         const val bankAccount = "bankAccount"
+        const val fcmToken = "fcmToken"
+        const val currentUser = "currentUser"
+        const val adversaryUser = "adversaryUser"
         val diffCallBack = object : DiffUtil.ItemCallback<User>() {
             override fun areItemsTheSame(oldItem: User, newItem: User): Boolean {
                 return oldItem.id == newItem.id

@@ -34,8 +34,8 @@ fun ImageView.loadImageByUrl(url: String?, context: Context?) {
     if (context != null) {
         Glide.with(context)
             .load(url)
-            .placeholder(R.drawable.ic_account_circle_24)
-            .error(R.drawable.ic_account_circle_24)
+            .placeholder(R.drawable.ic_base_image_24)
+            .error(R.drawable.ic_base_image_24)
             .into(this)
     }
 }

@@ -1,11 +1,9 @@
 package com.example.finalapplication.data.model
 
-import android.os.Parcelable
 import com.example.finalapplication.utils.NumberConstant
-import kotlinx.parcelize.Parcelize
+import java.io.Serializable
 
-@Parcelize
-class Account() : Parcelable {
+class Account() : Serializable {
     var password: String = ""
     var email: String = ""
 
@@ -26,12 +24,13 @@ class Account() : Parcelable {
         return true
     }
 
-    fun validateConfirmPassword(confirm : String) : Boolean{
-        if(this.password == confirm) return true
+    fun validateConfirmPassword(confirm: String): Boolean {
+        if (this.password == confirm) return true
         return false
     }
 
     companion object {
+        const val serialVersionUID = 1L
         const val password = "password"
         const val email = "email"
     }

@@ -28,7 +28,7 @@ class RemoteMessage(private val contactRemote: ContactDataSource.Remote) :
         listen: Listenner<Boolean>
     ) {
 
-        if (message.text.isNullOrEmpty()) {
+        if (message.text.isNullOrEmpty() && !message.image.isNullOrEmpty()) {
             val newid = getNewid()
             message.image?.let {
                 storage
